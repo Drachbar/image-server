@@ -20,12 +20,40 @@ var (
 	baseUrl   string
 )
 
-const (
-	apiKeyHeader = "X-API-Key"
-)
+const apiKeyHeader = "X-API-Key"
 
 func checkAPIKey(r *http.Request) bool {
 	return r.Header.Get(apiKeyHeader) == apiKey
+}
+
+func saveFile(file io.Reader, filename string) (string, error) {
+	hash := sha1.New()
+	tee := io.TeeReader(file, hash)
+
+	fileExt := filepath.Ext(filename)
+	hashedBytes, err := io.ReadAll(tee)
+	if err != nil {
+		return "", err
+	}
+
+	hashSum := hash.Sum(nil)
+	hashedSum := hex.EncodeToString(hashSum)
+
+	dir1 := hashedSum[:2]
+	dir2 := hashedSum[2:4]
+	fullDir := filepath.Join(uploadDir, dir1, dir2)
+
+	if err := os.MkdirAll(fullDir, 0755); err != nil {
+		return "", err
+	}
+
+	finalPath := filepath.Join(fullDir, hashedSum+fileExt)
+	if err := os.WriteFile(finalPath, hashedBytes, 0644); err != nil {
+		return "", err
+	}
+
+	// Returnera publik URL
+	return fmt.Sprintf("%s/%s/%s/%s%s", baseUrl, dir1, dir2, hashedSum, fileExt), nil
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +61,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "X-API-Key, Content-Type")
 
 	if r.Method == http.MethodOptions {
-		// Preflight request
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -43,8 +70,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20)
-	if err != nil {
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
@@ -54,42 +80,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing file", http.StatusBadRequest)
 		return
 	}
-
 	defer file.Close()
 
-	hash := sha1.New()
-	tee := io.TeeReader(file, hash)
+	fileURL, err := saveFile(file, handler.Filename)
+	if err != nil {
+		http.Error(w, "Kunde inte spara fil", http.StatusInternalServerError)
+		return
+	}
 
-	hashedSum := ""
-	tempFilePath := ""
-
-	func() {
-		fileExt := filepath.Ext(handler.Filename)
-		hashedBytes, _ := io.ReadAll(tee)
-		hashSum := hash.Sum(nil)
-		hashedSum = hex.EncodeToString(hashSum)
-
-		dir1 := hashedSum[:2]
-		dir2 := hashedSum[2:4]
-
-		fullDir := filepath.Join(uploadDir, dir1, dir2)
-		err := os.MkdirAll(fullDir, 0755)
-
-		if err != nil {
-			http.Error(w, "Kunde inte spara fil", http.StatusInternalServerError)
-			return
-		}
-
-		tempFilePath = filepath.Join(fullDir, hashedSum+fileExt)
-		err = os.WriteFile(tempFilePath, hashedBytes, 0644)
-
-		if err != nil {
-			http.Error(w, "Kunde inte spara fil", http.StatusInternalServerError)
-			return
-		}
-	}()
-
-	fileURL := fmt.Sprintf("%s/%s/%s/%s%s", baseUrl, hashedSum[:2], hashedSum[2:4], hashedSum, filepath.Ext(handler.Filename))
 	json.NewEncoder(w).Encode(map[string]string{"url": fileURL})
 }
 
@@ -110,5 +108,5 @@ func main() {
 	http.HandleFunc("/upload", uploadHandler)
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("Servern lyssnar på port %d...\n", port)
-	http.ListenAndServe(addr, nil)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
