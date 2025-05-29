@@ -48,6 +48,8 @@ func saveFile(file io.Reader, filename string) (string, error) {
 	}
 
 	finalPath := filepath.Join(fullDir, hashedSum+fileExt)
+	fmt.Println("Sparar till:", finalPath)
+
 	if err := os.WriteFile(finalPath, hashedBytes, 0644); err != nil {
 		return "", err
 	}

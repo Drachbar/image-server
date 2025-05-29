@@ -1,0 +1,12 @@
+# Byggd binär
+build/
+*.exe
+*.out
+
+# OS-filer
+.DS_Store
+Thumbs.db
+
+# IDE-filer (valfritt)
+.idea/
+.vscode/
