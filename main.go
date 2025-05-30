@@ -108,7 +108,22 @@ func main() {
 	}
 
 	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/healthcheck", healthCheckHandler)
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("Servern lyssnar på port %d...\n", port)
 	log.Fatal(http.ListenAndServe(addr, nil))
+}
+
+type HealthResponse struct {
+	Status string `json:"status"`
+}
+
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	response := HealthResponse{Status: "ok"}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
 }
