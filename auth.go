@@ -2,8 +2,8 @@ package main
 
 import "net/http"
 
-func checkAPIKey(r *http.Request) bool {
-	header := r.Header.Get(apiKeyHeader)
-
-	return header == apiKey
+func getAppFromAPIKey(r *http.Request) (string, bool) {
+	key := r.Header.Get(apiKeyHeader)
+	app, exists := apiKeys[key]
+	return app, exists
 }

@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func saveFile(file io.Reader, filename string) (string, error) {
+func saveFileWithApp(file io.Reader, filename, app string) (string, error) {
 	hash := sha1.New()
 	tee := io.TeeReader(file, hash)
 
@@ -25,24 +25,22 @@ func saveFile(file io.Reader, filename string) (string, error) {
 
 	dir1 := hashedSum[:2]
 	dir2 := hashedSum[2:4]
-	fullDir := filepath.Join(uploadDir, dir1, dir2)
+	fullDir := filepath.Join(uploadDir, app, dir1, dir2)
 
 	if err := os.MkdirAll(fullDir, 0755); err != nil {
 		return "", err
 	}
 
 	finalPath := filepath.Join(fullDir, hashedSum+fileExt)
-	fmt.Println("Sparar till:", finalPath)
-
 	if err := os.WriteFile(finalPath, hashedBytes, 0644); err != nil {
 		return "", err
 	}
 
-	// Returnera publik URL
-	return fmt.Sprintf("%s/%s/%s/%s%s", baseUrl, dir1, dir2, hashedSum, fileExt), nil
+	// Publik URL
+	return fmt.Sprintf("%s/%s/%s/%s/%s%s", baseUrl, app, dir1, dir2, hashedSum, fileExt), nil
 }
 
-func deleteFile(file string) error {
+func deleteFile(file, app string) error {
 	ext := filepath.Ext(file)
 	hash := strings.TrimSuffix(file, ext)
 
@@ -52,7 +50,7 @@ func deleteFile(file string) error {
 
 	dir1 := hash[:2]
 	dir2 := hash[2:4]
-	fullPath := filepath.Join(uploadDir, dir1, dir2, file)
+	fullPath := filepath.Join(uploadDir, app, dir1, dir2, file)
 
 	return os.Remove(fullPath)
 }

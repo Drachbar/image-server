@@ -1,12 +1,5 @@
 package main
 
-var (
-	apiKey    string
-	uploadDir string
-	port      int
-	baseUrl   string
-)
-
 const apiKeyHeader = "X-API-Key"
 
 type HealthResponse struct {

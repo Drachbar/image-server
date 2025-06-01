@@ -1,6 +1,13 @@
 package main
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
+
+type key int
+
+const appKey key = 0
 
 func chainMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for i := len(middlewares) - 1; i >= 0; i-- {
@@ -26,13 +33,12 @@ func withCors(handler http.HandlerFunc) http.HandlerFunc {
 
 func withAuth(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// API-nyckelkontroll
-		if !checkAPIKey(r) {
+		app, ok := getAppFromAPIKey(r)
+		if !ok {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
-		// Vidare till riktiga handlern
-		handler(w, r)
+		ctx := context.WithValue(r.Context(), appKey, app)
+		handler(w, r.WithContext(ctx))
 	}
 }
