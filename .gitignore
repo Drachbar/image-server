@@ -10,3 +10,6 @@ Thumbs.db
 # IDE-filer (valfritt)
 .idea/
 .vscode/
+
+# Lokala bilduppladdningar
+images/

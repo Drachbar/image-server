@@ -1,13 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
+var apiKeys map[string]string
+
+func loadAPIKeys(filepath string) error {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	return decoder.Decode(&apiKeys)
+}
+
 func init() {
+	flag.StringVar(&apiKeyFile, "apikeyfile", "/etc/apikeys.json", "Sökväg till API-nyckelfil")
 	flag.StringVar(&apiKey, "apikey", "", "API-nyckel som krävs för uppladdning")
 	flag.StringVar(&uploadDir, "dir", "/var/www/images", "Sökväg för uppladdade bilder")
 	flag.IntVar(&port, "port", 8080, "Port att köra servern på")
@@ -17,8 +33,8 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if apiKey == "" {
-		log.Fatal("API-nyckel krävs, starta med -apikey")
+	if err := loadAPIKeys(apiKeyFile); err != nil {
+		log.Fatalf("Kunde inte läsa API-nycklar: %v", err)
 	}
 
 	http.HandleFunc("/upload", chainMiddleware(uploadHandler, withCors, withAuth))
