@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func saveFile(file io.Reader, filename string) (string, error) {
@@ -39,4 +40,19 @@ func saveFile(file io.Reader, filename string) (string, error) {
 
 	// Returnera publik URL
 	return fmt.Sprintf("%s/%s/%s/%s%s", baseUrl, dir1, dir2, hashedSum, fileExt), nil
+}
+
+func deleteFile(file string) error {
+	ext := filepath.Ext(file)
+	hash := strings.TrimSuffix(file, ext)
+
+	if len(hash) < 4 {
+		return fmt.Errorf("ogiltig hash")
+	}
+
+	dir1 := hash[:2]
+	dir2 := hash[2:4]
+	fullPath := filepath.Join(uploadDir, dir1, dir2, file)
+
+	return os.Remove(fullPath)
 }

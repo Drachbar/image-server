@@ -21,8 +21,9 @@ func main() {
 		log.Fatal("API-nyckel krävs, starta med -apikey")
 	}
 
-	http.HandleFunc("/upload", uploadHandler)
-	http.HandleFunc("/healthcheck", healthCheckHandler)
+	http.HandleFunc("/upload", chainMiddleware(uploadHandler, withCors, withAuth))
+	http.HandleFunc("/delete", chainMiddleware(deleteHandler, withCors, withAuth))
+	http.HandleFunc("/healthcheck", chainMiddleware(healthCheckHandler, withCors))
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("Servern lyssnar på port %d...\n", port)
 	log.Fatal(http.ListenAndServe(addr, nil))
