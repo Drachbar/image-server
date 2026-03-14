@@ -22,14 +22,7 @@ if [ ! -f "$KEYFILE" ]; then
 fi
 
 TMPFILE=$(mktemp)
-python3 -c "
-import json, sys
-with open('$KEYFILE') as f:
-    keys = json.load(f)
-keys['$API_KEY'] = '$APP'
-with open('$TMPFILE', 'w') as f:
-    json.dump(keys, f, indent=2)
-"
+jq --arg key "$API_KEY" --arg app "$APP" '.[$key] = $app' "$KEYFILE" > "$TMPFILE"
 mv "$TMPFILE" "$KEYFILE"
 
 echo "App:      $APP"
