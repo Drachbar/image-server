@@ -1,0 +1,136 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: sans-serif;
+  background: #111;
+  color: #eee;
+  min-height: 100vh;
+}
+
+header {
+  padding: 32px 24px 24px;
+  border-bottom: 1px solid #222;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header a {
+  color: #555;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+header a:hover { color: #aaa; }
+
+header h1 {
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+main {
+  padding: 32px 24px;
+}
+
+/* Index — app cards */
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.app-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #1a1a1a;
+  transition: opacity 0.15s;
+}
+
+.app-card:hover { opacity: 0.8; }
+
+.app-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  background: #222;
+}
+
+.app-card-info {
+  padding: 12px;
+}
+
+.app-card-info h2 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.app-card-info span {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* App gallery */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+
+.grid img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  background: #1a1a1a;
+}
+
+.grid img:hover { opacity: 0.75; }
+
+/* Lightbox */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 100;
+  justify-content: center;
+  align-items: center;
+}
+
+.lightbox.open { display: flex; }
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+  user-select: none;
+}
+
+.lightbox-close:hover { color: #fff; }
+
+.status {
+  padding: 48px 0;
+  color: #555;
+}
