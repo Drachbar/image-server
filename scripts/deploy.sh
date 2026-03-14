@@ -11,7 +11,7 @@ echo "Git pull..."
 git pull
 
 echo "Bygger binär..."
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o image-server
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o image-server ./cmd/server
 
 echo "Byter ut binär..."
 mv image-server "$BINARY_DEST"
