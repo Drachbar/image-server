@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+chmod +x "$0"
 
 PROJECT_DIR="/root/projects/image-server"
 BINARY_DEST="/opt/imageserver/image-server"
