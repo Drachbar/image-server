@@ -56,6 +56,11 @@ func (s *Server) Routes() http.Handler {
 	}
 	mux.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.FS(sub))))
 	mux.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(s.config.UploadDir))))
+	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		content, _ := assets.FS.ReadFile("public/robots.txt")
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write(content)
+	})
 
 	return mux
 }
