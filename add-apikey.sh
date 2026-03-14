@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
 KEYFILE="${KEYFILE:-/etc/imageserver/apikeys.json}"
