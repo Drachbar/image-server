@@ -24,7 +24,6 @@ func loadAPIKeys(filepath string) error {
 
 func init() {
 	flag.StringVar(&apiKeyFile, "apikeyfile", "/etc/apikeys.json", "Sökväg till API-nyckelfil")
-	flag.StringVar(&apiKey, "apikey", "", "API-nyckel som krävs för uppladdning")
 	flag.StringVar(&uploadDir, "dir", "/var/www/images", "Sökväg för uppladdade bilder")
 	flag.IntVar(&port, "port", 8080, "Port att köra servern på")
 	flag.StringVar(&baseUrl, "baseurl", "http://localhost:8080/images", "Publik URL-bas för bilder")
@@ -40,6 +39,7 @@ func main() {
 	http.HandleFunc("/upload", chainMiddleware(uploadHandler, withCors, withAuth))
 	http.HandleFunc("/delete", chainMiddleware(deleteHandler, withCors, withAuth))
 	http.HandleFunc("/healthcheck", chainMiddleware(healthCheckHandler, withCors))
+	http.Handle("/images/", http.StripPrefix("/images/", http.FileServer(http.Dir(uploadDir))))
 	addr := fmt.Sprintf(":%d", port)
 	fmt.Printf("Servern lyssnar på port %d...\n", port)
 	log.Fatal(http.ListenAndServe(addr, nil))

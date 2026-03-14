@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+func hashDirPath(app, hash string) string {
+	return filepath.Join(uploadDir, app, hash[:2], hash[2:4])
+}
+
 func saveFileWithApp(file io.Reader, filename, app string) (string, error) {
 	hash := sha1.New()
 	tee := io.TeeReader(file, hash)
@@ -20,12 +24,8 @@ func saveFileWithApp(file io.Reader, filename, app string) (string, error) {
 		return "", err
 	}
 
-	hashSum := hash.Sum(nil)
-	hashedSum := hex.EncodeToString(hashSum)
-
-	dir1 := hashedSum[:2]
-	dir2 := hashedSum[2:4]
-	fullDir := filepath.Join(uploadDir, app, dir1, dir2)
+	hashedSum := hex.EncodeToString(hash.Sum(nil))
+	fullDir := hashDirPath(app, hashedSum)
 
 	if err := os.MkdirAll(fullDir, 0755); err != nil {
 		return "", err
@@ -36,8 +36,7 @@ func saveFileWithApp(file io.Reader, filename, app string) (string, error) {
 		return "", err
 	}
 
-	// Publik URL
-	return fmt.Sprintf("%s/%s/%s/%s/%s%s", baseUrl, app, dir1, dir2, hashedSum, fileExt), nil
+	return fmt.Sprintf("%s/%s/%s/%s/%s%s", baseUrl, app, hashedSum[:2], hashedSum[2:4], hashedSum, fileExt), nil
 }
 
 func deleteFile(file, app string) error {
@@ -48,9 +47,6 @@ func deleteFile(file, app string) error {
 		return fmt.Errorf("ogiltig hash")
 	}
 
-	dir1 := hash[:2]
-	dir2 := hash[2:4]
-	fullPath := filepath.Join(uploadDir, app, dir1, dir2, file)
-
+	fullPath := filepath.Join(hashDirPath(app, hash), file)
 	return os.Remove(fullPath)
 }

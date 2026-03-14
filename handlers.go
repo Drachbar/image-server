@@ -4,21 +4,21 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"path/filepath"
 )
 
 func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	response := HealthResponse{Status: "ok"}
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	if err := json.NewEncoder(w).Encode(HealthResponse{Status: "ok"}); err != nil {
+		log.Printf("Fel vid healthcheck-svar: %v", err)
 	}
 }
 
+func appFromContext(r *http.Request) string {
+	return r.Context().Value(appKey).(string)
+}
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	app := r.Context().Value(appKey).(string)
+	app := appFromContext(r)
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		http.Error(w, "Invalid form data", http.StatusBadRequest)
@@ -32,9 +32,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Skapa app-specifik undermapp
-	filepath.Join(uploadDir, app)
-
 	fileURL, err := saveFileWithApp(file, handler.Filename, app)
 	if err != nil {
 		log.Printf("Fel vid uppladdning: %v", err)
@@ -43,11 +40,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(UploadResponse{URL: fileURL})
+	if err := json.NewEncoder(w).Encode(UploadResponse{URL: fileURL}); err != nil {
+		log.Printf("Fel vid uppladdningssvar: %v", err)
+	}
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	app := r.Context().Value(appKey).(string)
+	app := appFromContext(r)
 
 	file := r.URL.Query().Get("filename")
 	if file == "" {
@@ -56,10 +55,10 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := deleteFile(file, app); err != nil {
+		log.Printf("Fel vid borttagning: %v", err)
 		http.Error(w, "Kunde inte ta bort filen", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Filen är borttagen"))
 }

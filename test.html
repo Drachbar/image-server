@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Image Server — Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h1 { font-size: 1.2rem; margin-bottom: 24px; color: #333; }
+
+    label { display: block; font-size: 0.85rem; color: #555; margin-bottom: 4px; }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover { background: #555; }
+    button:disabled { background: #aaa; cursor: default; }
+
+    .result {
+      margin-top: 24px;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      word-break: break-all;
+      display: none;
+    }
+
+    .result.success { background: #e6f4ea; color: #2d6a4f; }
+    .result.error   { background: #fdecea; color: #a61c00; }
+
+    .result img {
+      margin-top: 12px;
+      max-width: 100%;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Image Server — Testuppladdning</h1>
+
+    <label>Server-URL</label>
+    <input type="text" id="url" value="http://localhost:8080" placeholder="http://localhost:8080">
+
+    <label>API-nyckel</label>
+    <input type="text" id="apikey" placeholder="din-api-nyckel">
+
+    <label>Fil</label>
+    <input type="file" id="file" accept="image/*">
+
+    <button id="btn" onclick="upload()">Ladda upp</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    async function upload() {
+      const url    = document.getElementById('url').value.trim().replace(/\/$/, '')
+      const apikey = document.getElementById('apikey').value.trim()
+      const file   = document.getElementById('file').files[0]
+      const result = document.getElementById('result')
+      const btn    = document.getElementById('btn')
+
+      result.style.display = 'none'
+
+      if (!url || !apikey || !file) {
+        showResult('error', 'Fyll i URL, API-nyckel och välj en fil.')
+        return
+      }
+
+      const form = new FormData()
+      form.append('file', file)
+
+      btn.disabled = true
+      btn.textContent = 'Laddar upp...'
+
+      try {
+        const res = await fetch(`${url}/upload`, {
+          method: 'POST',
+          headers: { 'X-API-Key': apikey },
+          body: form
+        })
+
+        const data = await res.json()
+
+        if (!res.ok) {
+          showResult('error', `Fel ${res.status}: ${JSON.stringify(data)}`)
+          return
+        }
+
+        showResult('success', `
+          <strong>Uppladdning lyckades!</strong><br><br>
+          URL: <a href="${data.url}" target="_blank">${data.url}</a>
+          <br><img src="${data.url}" alt="uppladdad bild">
+        `)
+      } catch (err) {
+        showResult('error', `Kunde inte nå servern: ${err.message}`)
+      } finally {
+        btn.disabled = false
+        btn.textContent = 'Ladda upp'
+      }
+    }
+
+    function showResult(type, html) {
+      const el = document.getElementById('result')
+      el.className = `result ${type}`
+      el.innerHTML = html
+      el.style.display = 'block'
+    }
+  </script>
+</body>
+</html>
