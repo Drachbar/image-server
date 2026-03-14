@@ -62,7 +62,7 @@ API-nyckel: a3f9d2e1b8c74f0e5a6d9b2c8e4f7a1d3b6c9e2f5a8d1e4b7c0f3a6d9b2c5e8
 Sparad i:   /etc/imageserver/apikeys.json
 ```
 
-Kopiera API-nyckeln och konfigurera din applikation att skicka den som `X-API-Key`-header. Starta sedan om servern så att den nya nyckeln läses in.
+Kopiera API-nyckeln och konfigurera din applikation att skicka den som `X-API-Key`-header. Scriptet startar automatiskt om tjänsten på servern så att nyckeln läses in direkt.
 
 Vill du spara nycklar i en annan fil kan du ange sökvägen som andra argument:
 

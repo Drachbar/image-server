@@ -25,6 +25,11 @@ TMPFILE=$(mktemp)
 jq --arg key "$API_KEY" --arg app "$APP" '.[$key] = $app' "$KEYFILE" > "$TMPFILE"
 mv "$TMPFILE" "$KEYFILE"
 
-echo "App:      $APP"
+echo "App:        $APP"
 echo "API-nyckel: $API_KEY"
-echo "Sparad i: $KEYFILE"
+echo "Sparad i:   $KEYFILE"
+
+if [ -f /etc/init.d/image-server ]; then
+  rc-service image-server restart
+  echo "Tjänsten omstartad."
+fi
