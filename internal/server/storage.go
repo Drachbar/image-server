@@ -16,16 +16,27 @@ func (s *Server) hashDirPath(app, hash string) string {
 }
 
 func (s *Server) saveFile(file io.Reader, filename, app string) (string, error) {
-	hash := sha1.New()
-	tee := io.TeeReader(file, hash)
-
-	fileExt := filepath.Ext(filename)
-	hashedBytes, err := io.ReadAll(tee)
+	if err := os.MkdirAll(s.config.UploadDir, 0755); err != nil {
+		return "", err
+	}
+	tmpFile, err := os.CreateTemp(s.config.UploadDir, "imgupload-*")
 	if err != nil {
+		return "", err
+	}
+	tmpPath := tmpFile.Name()
+	defer os.Remove(tmpPath) // no-op efter lyckad rename
+
+	hash := sha1.New()
+	if _, err := io.Copy(tmpFile, io.TeeReader(file, hash)); err != nil {
+		tmpFile.Close()
+		return "", err
+	}
+	if err := tmpFile.Close(); err != nil {
 		return "", err
 	}
 
 	hashedSum := hex.EncodeToString(hash.Sum(nil))
+	fileExt := filepath.Ext(filename)
 	fullDir := s.hashDirPath(app, hashedSum)
 
 	if err := os.MkdirAll(fullDir, 0755); err != nil {
@@ -33,7 +44,7 @@ func (s *Server) saveFile(file io.Reader, filename, app string) (string, error) 
 	}
 
 	finalPath := filepath.Join(fullDir, hashedSum+fileExt)
-	if err := os.WriteFile(finalPath, hashedBytes, 0644); err != nil {
+	if err := os.Rename(tmpPath, finalPath); err != nil {
 		return "", err
 	}
 
